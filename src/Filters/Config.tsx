@@ -1,4 +1,5 @@
 export enum FilterType {
+    EMPTY,
     LOWER_THAN,
     EQUALS_TO,
     NOT_EQUALS_TO,
@@ -42,7 +43,7 @@ interface ITypeMapping {
 
 export class Config {
 
-    private fieldTypeMapping: IFieldTypeMapping = {
+    private static fieldTypeMapping: IFieldTypeMapping = {
         [FilterFields.NAME]: FieldTypes.TEXT,
         [FilterFields.AGE]: FieldTypes.NUMBER,
         [FilterFields.GENDER]: FieldTypes.RADIO,
@@ -50,15 +51,15 @@ export class Config {
         [FilterFields.INTERESTS]: FieldTypes.CHECKBOX,
     };
 
-    private typeFilters: ITypeMapping = {
-      [FieldTypes.TEXT]: [FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.CONTAINS, FilterType.NOT_CONTAINS],
-      [FieldTypes.NUMBER]: [FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
-      [FieldTypes.DATE]: [FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
-      [FieldTypes.RADIO]: [FilterType.RADIO],
-      [FieldTypes.CHECKBOX]: [FilterType.CHECKBOX],
+    private static typeFilters: ITypeMapping = {
+      [FieldTypes.TEXT]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.CONTAINS, FilterType.NOT_CONTAINS],
+      [FieldTypes.NUMBER]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
+      [FieldTypes.DATE]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
+      [FieldTypes.RADIO]: [FilterType.EMPTY, FilterType.RADIO],
+      [FieldTypes.CHECKBOX]: [FilterType.EMPTY, FilterType.CHECKBOX],
     };
 
-    private fields = {
+    private static fields = {
         [FilterFields.NAME]: 'Name',
         [FilterFields.AGE]: 'Age',
         [FilterFields.GENDER]: 'Gender',
@@ -66,7 +67,8 @@ export class Config {
         [FilterFields.INTERESTS]: 'Interests',
     };
 
-    private filters = {
+    private static filters = {
+        [FilterType.EMPTY]: '',
         [FilterType.LOWER_THAN]: 'Lower than',
         [FilterType.EQUALS_TO]: 'Equals to',
         [FilterType.NOT_EQUALS_TO]: 'Not equals to',
@@ -77,32 +79,32 @@ export class Config {
         [FilterType.CHECKBOX]: 'Checkbox',
     };
 
-    private blockTypes = {
+    private static blockTypes = {
         [BlockTypes.AND]: 'And',
         [BlockTypes.OR]: 'Or',
     };
 
-    private radioChoices = {
+    private static radioChoices = {
         [FilterFields.GENDER]: {'m': 'Male', 'f': 'Female'}
     };
 
-    private checkboxChoices = {
+    private static checkboxChoices = {
         [FilterFields.INTERESTS]: {'1': 'Football', '2': 'Books'}
     };
 
-    public isFieldOnList(field: number) {
+    public static isFieldOnList(field: number) {
         return Object.keys(this.fieldTypeMapping).indexOf(field.toString()) > -1;
     }
 
-    public getFields() {
+    public static getFields() {
         return this.fields;
     }
 
-    public getBlockTypes() {
+    public static getBlockTypes() {
         return this.blockTypes
     }
 
-    public getFilterChoicesForField(field: number) {
+    public static getFilterChoicesForField(field: number) {
 
         if (!this.isFieldOnList(field)) {
             return {};
@@ -115,12 +117,11 @@ export class Config {
         return output;
     }
 
-    public getFieldType(field: FilterType) {
+    public static getFieldType(field: FilterType) {
         return this.fieldTypeMapping[field];
     }
 
-    public isFilterValid(field: FilterFields, filter: number) {
-
+    public static isFilterValid(field: FilterFields, filter: number) {
         const allowedFilters = this.typeFilters[this.fieldTypeMapping[field]];
         let isValid = false;
 
@@ -134,21 +135,21 @@ export class Config {
         return isValid;
     }
 
-    public getRadioChoices(field: number) {
+    public static getRadioChoices(field: number) {
         return typeof this.radioChoices[field] !== 'undefined' ? this.radioChoices[field] : {};
     }
 
-    public getCheckboxChoices(field: number) {
+    public static getCheckboxChoices(field: number) {
         return typeof this.checkboxChoices[field] !== 'undefined' ? this.checkboxChoices[field] : {};
     }
 
-    public isValidCheckboxOption(field: number, value: any)
+    public static isValidCheckboxOption(field: number, value: any)
     {
         const checkboxChoices = this.getCheckboxChoices(field);
         return Object.keys(checkboxChoices).indexOf(value) !== -1;
     }
 
-    public isValidRadioOption(field: number, value: any)
+    public static isValidRadioOption(field: number, value: any)
     {
         const radioChoices = this.getRadioChoices(field);
         return Object.keys(radioChoices).indexOf(value) !== -1;

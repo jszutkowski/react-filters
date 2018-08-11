@@ -1,7 +1,10 @@
 import * as React from "react";
-import {Config, FieldTypes} from "./Config";
+import {Config, FieldTypes, FilterType} from "./Config";
 import {IFieldProps} from "./Filters";
 import Randomizer from "./Randomizer";
+import CheckboxInput from "./ValueInput/CheckboxInput";
+import RadioInput from "./ValueInput/RadioInput";
+import SingleInput from "./ValueInput/SingleInput";
 
 export interface IFieldDataProps {
     data: IFieldProps,
@@ -15,7 +18,7 @@ interface IState {
     checkboxValues: any[],
     valueField: any,
     selectedField: number
-    selectedFilter: any
+    selectedFilter: FilterType
 }
 
 export class Field extends React.Component<IFieldDataProps, IState> {
@@ -29,7 +32,7 @@ export class Field extends React.Component<IFieldDataProps, IState> {
             fields: '',
             filters: '',
             selectedField: -1,
-            selectedFilter: -1,
+            selectedFilter: FilterType.EMPTY,
             value: '',
             valueField: '',
         };
@@ -59,12 +62,16 @@ export class Field extends React.Component<IFieldDataProps, IState> {
                 </select>
             </div>
             {this.state.filters}
-            {this.state.valueField}
+            <div>
+                <SingleInput currentValue={this.state.value} onValueChange={this.changeValue} currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
+                <RadioInput currentValue={this.state.value} onValueChange={this.onRadioChange} currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
+                <CheckboxInput currentValue={this.state.value} onValueChange={this.onCheckboxChange} currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
+            </div>
         </div>;
     }
 
     private setFieldsSelectOptions() {
-        const fields = this.config.getFields();
+        const fields = Config.getFields();
         const keys = Object.keys(fields);
 
         this.setState({
@@ -73,147 +80,100 @@ export class Field extends React.Component<IFieldDataProps, IState> {
     }
 
     private selectField(event: any) {
-        if (!this.config.isFieldOnList(event.target.value)) {
+        if (!Config.isFieldOnList(event.target.value)) {
             return;
         }
 
         this.setState({
             checkboxValues: [],
             selectedField: event.target.value,
-            selectedFilter: -1,
+            selectedFilter: FilterType.EMPTY,
             value: '',
             valueField: ''
         });
 
-        this.props.data.field = event.target.value;
-        this.props.data.filter = null;
-        this.props.data.value = null;
-
+        this.resetData();
         this.createFilters(event.target.value);
     }
 
     private selectFilter(event: any) {
+        const selectedFilter = parseInt(event.target.value, 10);
+        this.resetData();
 
-        const selectedFilter = event.target.value;
-
-        if (selectedFilter !== -1 && !this.config.isFilterValid(this.state.selectedField, selectedFilter)) {
-            return
+        if (!Config.isFilterValid(this.state.selectedField, selectedFilter)) {
+            return;
         }
 
         this.setState({
             selectedFilter,
-            value: ''
+            value: null
         });
 
-        this.props.data.filter = event.target.value;
-        this.props.data.value = null;
-        // this.createValueField();
     }
 
     private createFilters(field: string) {
-        const filters = this.config.getFilterChoicesForField(parseInt(field, 10));
+        const filters = Config.getFilterChoicesForField(parseInt(field, 10));
         const keys = Object.keys(filters);
         const options = keys.map((key) => <option key={'filter_' + key} value={key}>{filters[key]}</option>);
-        options.unshift(<option key={'filter_empty'} value={-1} />);
 
         this.setState({
             filters: <div><select onChange={this.selectFilter}>{options}</select></div>,
-            selectedFilter: -1,
+            selectedFilter: FilterType.EMPTY,
             value: ''
         });
-    }
-
-    private createValueField() {
-
-        const selectedField = this.config.getFieldType(this.state.selectedField);
-
-        let valueField: any = '';
-        const namePrefix = Randomizer.getRandomNamePrefix();
-
-        switch (+selectedField) {
-            case FieldTypes.RADIO:
-
-                const choices = this.config.getRadioChoices(this.state.selectedField);
-                const choicesKeys = Object.keys(choices);
-
-                valueField = <div>
-                    {choicesKeys.map(key => (
-                        <div key={namePrefix + "_" + key}>
-                            <label >{choices[key]}</label>
-                            <input type="radio" name={namePrefix} value={key} onChange={this.onRadioChange} />
-                        </div>
-                    ))}
-                    </div>;
-                break;
-            case FieldTypes.CHECKBOX:
-
-                const checkboxValues = this.config.getCheckboxChoices(this.state.selectedField);
-                const checkboxKeys = Object.keys(checkboxValues);
-
-                valueField = <div>
-                    {checkboxKeys.map(key => (
-                        <div key={namePrefix + "_" + key}>
-                            <label >{checkboxValues[key]}</label>
-                            <input type="checkbox" name={namePrefix} value={key} onChange={this.onCheckboxChange} />
-                        </div>
-                    ))}
-                </div>;
-                break;
-            case FieldTypes.NUMBER:
-                valueField = <input type="number" key={namePrefix} value={this.state.value} onChange={this.changeValue}/>;
-                break;
-            case FieldTypes.TEXT:
-                valueField = <input type="text" key={namePrefix} value={this.state.value} onChange={this.changeValue}/>;
-                break;
-            case FieldTypes.DATE:
-                valueField = <input type="text" key={namePrefix} value={this.state.value} onChange={this.changeValue}/>;
-                break;
-        }
-
-        this.setState({ valueField });
     }
 
     private changeValue(event: any) {
         const value = event.target.value;
-        global.console.log('on change: ' + event.target.value + " ||| " + this.state.value)
-        global.console.log(event)
-        this.setState({ value })
+        this.setState({ value });
+        this.fillData(value);
     }
 
     private onCheckboxChange(event: any) {
         const isChecked = event.target.checked;
         const value = event.target.value;
 
-        if (!this.config.isValidCheckboxOption(this.state.selectedField, value)) {
+        if (! Config.isValidCheckboxOption(this.state.selectedField, value)) {
             return;
         }
 
+        const previousValue: any[] = Array.isArray(this.state.value) ? this.state.value : [];
         let checkboxValues = [];
 
-        if (isChecked && this.state.checkboxValues.indexOf(value) === -1) {
-            checkboxValues = [...this.state.checkboxValues, value];
-        } else if (!isChecked && this.state.checkboxValues.indexOf(value) !== -1) {
-            checkboxValues = this.state.checkboxValues.filter(element => element !== value);
+        if (isChecked && previousValue.indexOf(value) === -1) {
+            checkboxValues = [...previousValue, value];
+        } else if (!isChecked && previousValue.indexOf(value) !== -1) {
+            checkboxValues = previousValue.filter(element => element !== value);
         }
 
-        this.setState({
-            checkboxValues
-        });
+        this.setState({ value: checkboxValues });
+        this.fillData(checkboxValues);
+    }
+
+    private onRadioChange(event: any) {
+        const value = event.target.value;
+
+        if (!Config.isValidRadioOption(this.state.selectedField, value)) {
+            return;
+        }
+
+        this.setState({ value });
+        this.fillData(value);
     }
 
     private removeFieldClick() {
         this.props.onRemoveFieldFromParent(this.props.data.uuid);
     }
 
-    private onRadioChange(event: any) {
-        const value = event.target.value;
+    private fillData(value: any) {
+        this.props.data.field = this.state.selectedField;
+        this.props.data.filter = this.state.selectedFilter;
+        this.props.data.value = value;
+    }
 
-        if (!this.config.isValidRadioOption(this.state.selectedField, value)) {
-            return;
-        }
-
-        this.setState({
-            value
-        });
+    private resetData() {
+        this.props.data.field = null;
+        this.props.data.filter = null;
+        this.props.data.value = null;
     }
 }

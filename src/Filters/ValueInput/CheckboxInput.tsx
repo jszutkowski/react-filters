@@ -3,10 +3,10 @@ import {Config, FieldTypes, FilterType} from "../Config";
 import Randomizer from "../Randomizer";
 import IMultiInputProps from "./IMultiInputProps";
 
-export default class RadioInput extends React.Component<IMultiInputProps, {}> {
+export default class CheckboxInput extends React.Component<IMultiInputProps, {}> {
     private readonly uniqueName: string;
 
-    constructor(props: IMultiInputProps){
+    constructor(props: IMultiInputProps) {
         super(props);
         this.uniqueName = Randomizer.getRandomNamePrefix();
     }
@@ -16,18 +16,19 @@ export default class RadioInput extends React.Component<IMultiInputProps, {}> {
             return null;
         }
 
-        if (Config.getFieldType(this.props.currentField) !== FieldTypes.RADIO) {
+        if (Config.getFieldType(this.props.currentField) !== FieldTypes.CHECKBOX) {
             return null;
         }
 
-        const choices = Config.getRadioChoices(this.props.currentField);
-        const choicesKeys = Object.keys(choices);
+        const checkboxValues = Config.getCheckboxChoices(this.props.currentField);
+        const checkboxKeys = Object.keys(checkboxValues);
 
         return <div>
-            {choicesKeys.map(key => (
+            {checkboxKeys.map(key => (
                 <div key={this.uniqueName + "_" + key}>
-                    <label >{choices[key]}</label>
-                    <input type="radio" name={this.uniqueName} value={key} onChange={this.props.onValueChange} />
+                    <label>{checkboxValues[key]}</label>
+                    <input type="checkbox" name={this.uniqueName + "_" + key} value={key}
+                           onChange={this.props.onValueChange}/>
                 </div>
             ))}
         </div>;

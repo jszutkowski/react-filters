@@ -1,9 +1,9 @@
 import * as React from "react";
+import BlockType from "./BlockType";
 import {Buttons} from "./Buttons";
+import {Config} from "./Config";
 import {Field} from "./Field";
 import {createConfig, createFieldConfig, IFieldProps, IFilterConfig, IFilterProps} from "./Filters";
-import BlockType from "./BlockType";
-import {Config} from "./Config";
 
 interface IState {
     blocks: IFilterProps[],
@@ -33,7 +33,7 @@ export class Block extends React.Component<IFilterConfig, IState> {
     public render() {
         return <div className="block">
             <div>
-                <BlockType onBlockTypeChanged={this.blockTypeChanged} blocks={this.config.getBlockTypes()}/>
+                <BlockType onBlockTypeChanged={this.blockTypeChanged} blocks={Config.getBlockTypes()}/>
             </div>
             <div className="block-content">
                 {this.getFields()}
