@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.block {
+  text-align: left;
+  padding: 10px;
+  border: 2px solid red;
+  margin: 5px;
+}
+
+.block .block-buttons {
+  background: #ddd;
+}
+
+.block .block-field {
+  border: 2px solid green;
+  padding: 5px;
+  margin: 5px;
+}

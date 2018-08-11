@@ -1,0 +1,17 @@
+{
+  "extends": ["tslint:recommended", "tslint-react", "tslint-config-prettier"],
+  "linterOptions": {
+    "exclude": [
+      "config/**/*.js",
+      "node_modules/**/*.ts",
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ]
+  },
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+//  "no-empty": [true, "allow-empty-catch", "allow-empty-functions"]
+  "no-empty": false
+}
