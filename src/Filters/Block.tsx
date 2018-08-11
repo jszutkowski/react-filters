@@ -1,98 +1,95 @@
 import * as React from "react";
 import {Buttons} from "./Buttons";
 import {Field} from "./Field";
-import {createConfig, createFieldConfig, IFilterConfig, IFilterProps} from "./Filters";
+import {createConfig, createFieldConfig, IFieldProps, IFilterConfig, IFilterProps} from "./Filters";
+import BlockType from "./BlockType";
+import {Config} from "./Config";
 
 interface IState {
-    blocks: any[],
-    fields: any[],
-    blockData: IFilterProps
-}
-
-interface IBlockInterface {
-    uuid: string,
-    config: IFilterProps
-
+    blocks: IFilterProps[],
+    fields: IFieldProps[],
 }
 
 export class Block extends React.Component<IFilterConfig, IState> {
+    private config: Config;
 
     constructor(props: IFilterConfig){
         super(props);
 
-
-        global.console.log('ssss');
-        global.console.log(props);
-
         this.state = {
-            blockData: createConfig(),
             blocks: [],
             fields: []
         };
+
+        this.config = new Config();
         this.addField = this.addField.bind(this);
         this.addBlock = this.addBlock.bind(this);
         this.removeBlock = this.removeBlock.bind(this);
-        this.removeFromParent = this.removeFromParent.bind(this);
-    }
-
-    public componentDidMount() {
-        global.console.log("componentDidMount");
-        this.setState({
-            blocks: []
-        });
+        this.removeBlockFromParent = this.removeBlockFromParent.bind(this);
+        this.removeFieldFromParent = this.removeFieldFromParent.bind(this);
+        this.blockTypeChanged = this.blockTypeChanged.bind(this);
     }
 
     public render() {
         return <div className="block">
+            <div>
+                <BlockType onBlockTypeChanged={this.blockTypeChanged} blocks={this.config.getBlockTypes()}/>
+            </div>
             <div className="block-content">
-                {this.state.fields}
-                {this.state.blocks}
-                </div>
+                {this.getFields()}
+                {this.getBlocks()}
+            </div>
             <Buttons onBlockAdd={this.addBlock} onBlockRemove={this.removeBlock} onFieldAdd={this.addField} isFirstBlock={this.props.isFirst}/>
         </div>;
     }
 
-    private addField() {
+    private getFields(): any {
+        return this.state.fields.map(field =>
+            <Field key={field.uuid} data={field} onRemoveFieldFromParent={this.removeFieldFromParent} />
+        )
+    }
 
+    private getBlocks(): any {
+        return this.state.blocks.map(block =>
+            <Block key={block.uuid} config={block} isFirst={false} onRemoveBlockFromParent={this.removeBlockFromParent} />
+        )
+    }
+
+    private addField() {
         const fieldConfig = createFieldConfig();
         this.props.config.fields.push(fieldConfig);
         this.setState(prevState => ({
-            fields: [...prevState.fields, [<Field key={prevState.fields.length + 1} data={fieldConfig} />]]
+            fields: [...prevState.fields, fieldConfig]
         }));
     }
 
     private addBlock() {
-
         const newConfig = createConfig();
         this.props.config.blocks.push(newConfig);
-
-        // const block = <Block key={this.state.blocks.length + 1} config={newConfig} isFirst={false} />;
-        // block.props.onRemoveFromParent = () => this.removeFromParent(block);
-
         this.setState(prevState => ({
-            blocks: [...prevState.blocks,  <Block key={this.state.blocks.length + 1} config={newConfig} isFirst={false} onRemoveFromParent={this.removeFromParent} />]
+            blocks: [...prevState.blocks,  newConfig]
         }));
     }
 
     private removeBlock() {
-        this.props.config.blocks = this.props.config.blocks.filter(element => element !== this.state.blockData);
-        // this.setState({
-        //     blocks: []
-        // });
-
-        this.props.onRemoveFromParent(this);
+        this.props.onRemoveBlockFromParent(this.props.config.uuid);
     }
 
-    private removeFromParent(block: any) {
-
-global.console.log(this.state.blocks.length + ", " + this.state.blocks.filter(element => block !== element).length);
+    private removeBlockFromParent(blockUuid: string) {
+        this.props.config.blocks = this.props.config.blocks.filter(element => blockUuid !== element.uuid);
         this.setState(prevState => ({
-            blocks: prevState.blocks.filter(element => block !== element)
+            blocks: prevState.blocks.filter(element => blockUuid !== element.uuid)
         }));
+    }
 
-global.console.log('remove from parent');
-global.console.log(block);
-global.console.log(block.key);
-global.console.log(block.props);
+    private removeFieldFromParent(fieldUuid: string) {
+        this.props.config.fields = this.props.config.fields.filter(element => fieldUuid !== element.uuid);
+        this.setState(prevState => ({
+            fields: prevState.fields.filter(element => fieldUuid !== element.uuid)
+        }));
+    }
+    
+    private blockTypeChanged(event: any) {
+        this.props.config.blockType = event.target.value;
     }
 }

@@ -4,11 +4,12 @@ import {IFieldProps} from "./Filters";
 import Randomizer from "./Randomizer";
 
 export interface IFieldDataProps {
-    data: IFieldProps
+    data: IFieldProps,
+    onRemoveFieldFromParent: any
 }
 
 interface IState {
-    fields: any[],
+    fields: any,
     filters: any,
     value: any,
     checkboxValues: any[],
@@ -25,7 +26,7 @@ export class Field extends React.Component<IFieldDataProps, IState> {
         super(props);
         this.state = {
             checkboxValues: [],
-            fields: [],
+            fields: '',
             filters: '',
             selectedField: -1,
             selectedFilter: -1,
@@ -38,14 +39,28 @@ export class Field extends React.Component<IFieldDataProps, IState> {
         this.selectFilter = this.selectFilter.bind(this);
         this.changeValue = this.changeValue.bind(this);
         this.onCheckboxChange = this.onCheckboxChange.bind(this);
+        this.onRadioChange = this.onRadioChange.bind(this);
+        this.removeFieldClick = this.removeFieldClick.bind(this);
     }
 
-    componentDidMount() {
+    public componentDidMount() {
         this.setFieldsSelectOptions();
 
     }
 
-    public addField(props: IState) {
+    public render() {
+        return <div className="block-field">
+            <div>
+                <button onClick={this.removeFieldClick}>X</button>
+            </div>
+            <div>
+                <select onChange={this.selectField} value={this.state.selectedField}>
+                    {this.state.fields}
+                </select>
+            </div>
+            {this.state.filters}
+            {this.state.valueField}
+        </div>;
     }
 
     private setFieldsSelectOptions() {
@@ -58,30 +73,41 @@ export class Field extends React.Component<IFieldDataProps, IState> {
     }
 
     private selectField(event: any) {
-        // validation
+        if (!this.config.isFieldOnList(event.target.value)) {
+            return;
+        }
 
         this.setState({
             checkboxValues: [],
             selectedField: event.target.value,
             selectedFilter: -1,
-            value: null,
-            valueField: null
+            value: '',
+            valueField: ''
         });
+
+        this.props.data.field = event.target.value;
+        this.props.data.filter = null;
+        this.props.data.value = null;
 
         this.createFilters(event.target.value);
     }
 
     private selectFilter(event: any) {
+
         const selectedFilter = event.target.value;
 
-        // validation
+        if (selectedFilter !== -1 && !this.config.isFilterValid(this.state.selectedField, selectedFilter)) {
+            return
+        }
 
         this.setState({
             selectedFilter,
-            value: null
+            value: ''
         });
 
-        this.createValueField();
+        this.props.data.filter = event.target.value;
+        this.props.data.value = null;
+        // this.createValueField();
     }
 
     private createFilters(field: string) {
@@ -91,9 +117,9 @@ export class Field extends React.Component<IFieldDataProps, IState> {
         options.unshift(<option key={'filter_empty'} value={-1} />);
 
         this.setState({
-            filters: <select onChange={this.selectFilter}>{options}</select>,
+            filters: <div><select onChange={this.selectFilter}>{options}</select></div>,
             selectedFilter: -1,
-            value: null
+            value: ''
         });
     }
 
@@ -148,28 +174,35 @@ export class Field extends React.Component<IFieldDataProps, IState> {
     }
 
     private changeValue(event: any) {
-        this.setState({ value: event.target.value})
+        const value = event.target.value;
+        global.console.log('on change: ' + event.target.value + " ||| " + this.state.value)
+        global.console.log(event)
+        this.setState({ value })
     }
 
     private onCheckboxChange(event: any) {
         const isChecked = event.target.checked;
         const value = event.target.value;
 
-        if (!this.config.isValidCheckoboxOption(this.state.selectedField, value)) {
+        if (!this.config.isValidCheckboxOption(this.state.selectedField, value)) {
             return;
         }
 
-        let newValues = [];
+        let checkboxValues = [];
 
         if (isChecked && this.state.checkboxValues.indexOf(value) === -1) {
-            newValues = [...this.state.checkboxValues, value];
+            checkboxValues = [...this.state.checkboxValues, value];
         } else if (!isChecked && this.state.checkboxValues.indexOf(value) !== -1) {
-            newValues = this.state.checkboxValues.filter(element => element !== value);
+            checkboxValues = this.state.checkboxValues.filter(element => element !== value);
         }
 
         this.setState({
-            checkboxValues: newValues
+            checkboxValues
         });
+    }
+
+    private removeFieldClick() {
+        this.props.onRemoveFieldFromParent(this.props.data.uuid);
     }
 
     private onRadioChange(event: any) {
@@ -182,21 +215,5 @@ export class Field extends React.Component<IFieldDataProps, IState> {
         this.setState({
             value
         });
-    }
-
-    public render() {
-        return <div className="block-field">
-            <div>
-                <select onChange={this.selectField} value={this.state.selectedField}>
-                    {this.state.fields}
-                </select>
-            </div>
-            <div>
-                {this.state.filters}
-            </div>
-            <div>
-                {this.state.valueField}
-            </div>
-        </div>;
     }
 }

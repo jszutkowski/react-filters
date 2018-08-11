@@ -1,12 +1,12 @@
 import * as React from "react";
 import {Block} from "./Block";
-import {FilterFields, FilterType} from "./Config";
+import {BlockTypes, FilterFields, FilterType} from "./Config";
 const uuidv4 = require('uuid/v4');
 
 export interface IFilterConfig {
     config: IFilterProps,
     isFirst: boolean,
-    onRemoveFromParent?: any
+    onRemoveBlockFromParent?: any
 }
 
 export interface IFilterProps {
@@ -19,7 +19,7 @@ export interface IFilterProps {
 
 export function createConfig(): IFilterProps {
     return {
-        blockType: -1,
+        blockType: BlockTypes.AND,
         blocks: [],
         fields: [],
         uuid: uuidv4()
@@ -33,10 +33,6 @@ export interface IFieldProps {
     uuid: string,
 }
 
-export interface IFieldConfigProps {
-    config: IFieldProps
-}
-
 export function createFieldConfig(): IFieldProps {
     return {
         field: null,
@@ -46,18 +42,36 @@ export function createFieldConfig(): IFieldProps {
     }
 }
 
-export class Filters extends React.Component<{}, {}> {
+export class Filters extends React.Component<{}, {currentConfig: {}}> {
 
     private config: IFilterProps = createConfig();
 
     constructor(props: any) {
         super(props);
+
+        this.state = {
+            currentConfig: {}
+        }
+
+        this.refreshConfig = this.refreshConfig.bind(this);
     }
 
     public render() {
-        global.console.log('----');
-        global.console.log(this.config);
-        global.console.log('++++');
-        return <Block config={this.config} isFirst={true} />;
+
+        return <div>
+                {this.showConfig()}
+                <button onClick={this.refreshConfig}>Refresh</button>
+                <Block config={this.config} isFirst={true} />
+            </div>;
+    }
+
+    private refreshConfig() {
+        this.setState({currentConfig : this.config})
+    }
+
+
+
+    private showConfig(): any {
+        return JSON.stringify(this.state.currentConfig);
     }
 }

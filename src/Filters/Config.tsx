@@ -25,6 +25,12 @@ export enum FieldTypes {
     CHECKBOX
 }
 
+export enum BlockTypes {
+    NONE,
+    AND,
+    OR
+}
+
 interface IFieldTypeMapping {
     [index: number] : FieldTypes
 }
@@ -71,6 +77,11 @@ export class Config {
         [FilterType.CHECKBOX]: 'Checkbox',
     };
 
+    private blockTypes = {
+        [BlockTypes.AND]: 'And',
+        [BlockTypes.OR]: 'Or',
+    };
+
     private radioChoices = {
         [FilterFields.GENDER]: {'m': 'Male', 'f': 'Female'}
     };
@@ -85,6 +96,10 @@ export class Config {
 
     public getFields() {
         return this.fields;
+    }
+
+    public getBlockTypes() {
+        return this.blockTypes
     }
 
     public getFilterChoicesForField(field: number) {
@@ -104,19 +119,21 @@ export class Config {
         return this.fieldTypeMapping[field];
     }
 
-    public getField(field: FilterFields, filter: FilterType) {
+    public isFilterValid(field: FilterFields, filter: number) {
 
+        const allowedFilters = this.typeFilters[this.fieldTypeMapping[field]];
+        let isValid = false;
 
+        filter = parseInt(filter + "", 10);
+
+        allowedFilters.forEach(allowedFilter => {
+            if (!isValid && allowedFilter === filter) {
+                isValid = true;
+            }
+        });
+        return isValid;
     }
 
-    // private getInput(type) {
-    //
-    //     let type = (type === FieldTypes.TEXT ? 'text' : type === FieldTypes.NUMBER ? 'number' : type === FieldTypes.DATE ? 'text' : '');
-    //     let isDateField = type === FieldTypes.DATE;
-    //
-    //     return <input type={type} />
-    // }
-    //
     public getRadioChoices(field: number) {
         return typeof this.radioChoices[field] !== 'undefined' ? this.radioChoices[field] : {};
     }
@@ -125,7 +142,7 @@ export class Config {
         return typeof this.checkboxChoices[field] !== 'undefined' ? this.checkboxChoices[field] : {};
     }
 
-    public isValidCheckoboxOption(field: number, value: any)
+    public isValidCheckboxOption(field: number, value: any)
     {
         const checkboxChoices = this.getCheckboxChoices(field);
         return Object.keys(checkboxChoices).indexOf(value) !== -1;
@@ -136,5 +153,4 @@ export class Config {
         const radioChoices = this.getRadioChoices(field);
         return Object.keys(radioChoices).indexOf(value) !== -1;
     }
-
 }
