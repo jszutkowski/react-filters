@@ -1,16 +1,16 @@
 import * as React from "react";
-import {Config, FieldTypes} from "../Config";
+import {Config, FieldTypes, FilterFields, FilterType} from "../Config";
 
 export default function SingleInput(props: any) {
 
-    if (!props.currentField || props.currentFilter === -1) {
+    if (props.currentField === FilterFields.EMPTY || props.currentFilter === FilterType.EMPTY) {
         return null;
     }
 
     const fieldType = Config.getFieldType(props.currentField);
     let inputType;
 
-    switch(fieldType) {
+    switch (fieldType) {
         case FieldTypes.TEXT:
         case FieldTypes.DATE:
             inputType = "text";
@@ -25,6 +25,6 @@ export default function SingleInput(props: any) {
     if (inputType === "") {
         return null;
     }
-    global.console.log("rendering s")
-    return <input type="number" value={props.currentValue} onChange={props.onValueChange} />;
+
+    return <input type={inputType} value={props.currentValue} onChange={props.onValueChange} className="form-control"/>;
 }

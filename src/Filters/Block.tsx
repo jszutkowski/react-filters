@@ -13,7 +13,7 @@ interface IState {
 export class Block extends React.Component<IFilterConfig, IState> {
     private config: Config;
 
-    constructor(props: IFilterConfig){
+    constructor(props: IFilterConfig) {
         super(props);
 
         this.state = {
@@ -32,26 +32,26 @@ export class Block extends React.Component<IFilterConfig, IState> {
 
     public render() {
         return <div className="block">
-            <div>
-                <BlockType onBlockTypeChanged={this.blockTypeChanged} blocks={Config.getBlockTypes()}/>
-            </div>
+            <BlockType onBlockTypeChanged={this.blockTypeChanged} blocks={Config.getBlockTypes()}/>
             <div className="block-content">
                 {this.getFields()}
                 {this.getBlocks()}
             </div>
-            <Buttons onBlockAdd={this.addBlock} onBlockRemove={this.removeBlock} onFieldAdd={this.addField} isFirstBlock={this.props.isFirst}/>
+            <Buttons onBlockAdd={this.addBlock} onBlockRemove={this.removeBlock} onFieldAdd={this.addField}
+                     isFirstBlock={this.props.isFirst}/>
         </div>;
     }
 
     private getFields(): any {
         return this.state.fields.map(field =>
-            <Field key={field.uuid} data={field} onRemoveFieldFromParent={this.removeFieldFromParent} />
+            <Field key={field.uuid} data={field} onRemoveFieldFromParent={this.removeFieldFromParent}/>
         )
     }
 
     private getBlocks(): any {
         return this.state.blocks.map(block =>
-            <Block key={block.uuid} config={block} isFirst={false} onRemoveBlockFromParent={this.removeBlockFromParent} />
+            <Block key={block.uuid} config={block} isFirst={false}
+                   onRemoveBlockFromParent={this.removeBlockFromParent}/>
         )
     }
 
@@ -67,7 +67,7 @@ export class Block extends React.Component<IFilterConfig, IState> {
         const newConfig = createConfig();
         this.props.config.blocks.push(newConfig);
         this.setState(prevState => ({
-            blocks: [...prevState.blocks,  newConfig]
+            blocks: [...prevState.blocks, newConfig]
         }));
     }
 
@@ -88,7 +88,7 @@ export class Block extends React.Component<IFilterConfig, IState> {
             fields: prevState.fields.filter(element => fieldUuid !== element.uuid)
         }));
     }
-    
+
     private blockTypeChanged(event: any) {
         this.props.config.blockType = event.target.value;
     }

@@ -11,6 +11,7 @@ export enum FilterType {
 }
 
 export enum FilterFields {
+    EMPTY,
     AGE,
     GENDER,
     NAME,
@@ -19,6 +20,7 @@ export enum FilterFields {
 }
 
 export enum FieldTypes {
+    NONE,
     TEXT,
     NUMBER,
     DATE,
@@ -27,23 +29,23 @@ export enum FieldTypes {
 }
 
 export enum BlockTypes {
-    NONE,
     AND,
     OR
 }
 
 interface IFieldTypeMapping {
-    [index: number] : FieldTypes
+    [index: number]: FieldTypes
 }
 
 
 interface ITypeMapping {
-    [index: number] : FilterType[]
+    [index: number]: FilterType[]
 }
 
 export class Config {
 
     private static fieldTypeMapping: IFieldTypeMapping = {
+        [FilterFields.EMPTY]: FieldTypes.NONE,
         [FilterFields.NAME]: FieldTypes.TEXT,
         [FilterFields.AGE]: FieldTypes.NUMBER,
         [FilterFields.GENDER]: FieldTypes.RADIO,
@@ -52,14 +54,16 @@ export class Config {
     };
 
     private static typeFilters: ITypeMapping = {
-      [FieldTypes.TEXT]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.CONTAINS, FilterType.NOT_CONTAINS],
-      [FieldTypes.NUMBER]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
-      [FieldTypes.DATE]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
-      [FieldTypes.RADIO]: [FilterType.EMPTY, FilterType.RADIO],
-      [FieldTypes.CHECKBOX]: [FilterType.EMPTY, FilterType.CHECKBOX],
+        [FieldTypes.NONE]: [],
+        [FieldTypes.TEXT]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.CONTAINS, FilterType.NOT_CONTAINS],
+        [FieldTypes.NUMBER]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
+        [FieldTypes.DATE]: [FilterType.EMPTY, FilterType.EQUALS_TO, FilterType.NOT_EQUALS_TO, FilterType.LOWER_THAN, FilterType.GREATER_THAN],
+        [FieldTypes.RADIO]: [FilterType.EMPTY, FilterType.RADIO],
+        [FieldTypes.CHECKBOX]: [FilterType.EMPTY, FilterType.CHECKBOX],
     };
 
     private static fields = {
+        [FilterFields.EMPTY]: '',
         [FilterFields.NAME]: 'Name',
         [FilterFields.AGE]: 'Age',
         [FilterFields.GENDER]: 'Gender',
@@ -92,8 +96,9 @@ export class Config {
         [FilterFields.INTERESTS]: {'1': 'Football', '2': 'Books'}
     };
 
-    public static isFieldOnList(field: number) {
-        return Object.keys(this.fieldTypeMapping).indexOf(field.toString()) > -1;
+    public static getFieldConstant(field: string): FilterFields {
+        return typeof FilterFields[field] !== "undefined" ?
+            parseInt(FilterFields[FilterFields[field]], 10) : FilterFields.EMPTY;
     }
 
     public static getFields() {
@@ -104,12 +109,7 @@ export class Config {
         return this.blockTypes
     }
 
-    public static getFilterChoicesForField(field: number) {
-
-        if (!this.isFieldOnList(field)) {
-            return {};
-        }
-
+    public static getFilterChoicesForField(field: FilterFields) {
         const type: FieldTypes = this.fieldTypeMapping[field];
         const filters: FilterType[] = this.typeFilters[type];
         const output = {};
@@ -117,40 +117,36 @@ export class Config {
         return output;
     }
 
-    public static getFieldType(field: FilterType) {
+    public static getFieldType(field: FilterType): FieldTypes {
         return this.fieldTypeMapping[field];
     }
 
-    public static isFilterValid(field: FilterFields, filter: number) {
-        const allowedFilters = this.typeFilters[this.fieldTypeMapping[field]];
-        let isValid = false;
+    public static getFilterConstForValue(field: FilterFields, filter: string) {
+        const filters = this.typeFilters[this.fieldTypeMapping[field]];
+        let constant: FilterType = FilterType.EMPTY;
 
-        filter = parseInt(filter + "", 10);
-
-        allowedFilters.forEach(allowedFilter => {
-            if (!isValid && allowedFilter === filter) {
-                isValid = true;
+        filters.forEach(filterItem => {
+            if (filterItem.toString() === filter.toString()) {
+                constant = filterItem;
             }
         });
-        return isValid;
+        return constant;
     }
 
-    public static getRadioChoices(field: number) {
+    public static getRadioChoices(field: FilterFields) {
         return typeof this.radioChoices[field] !== 'undefined' ? this.radioChoices[field] : {};
     }
 
-    public static getCheckboxChoices(field: number) {
+    public static getCheckboxChoices(field: FilterFields) {
         return typeof this.checkboxChoices[field] !== 'undefined' ? this.checkboxChoices[field] : {};
     }
 
-    public static isValidCheckboxOption(field: number, value: any)
-    {
+    public static isValidCheckboxOption(field: FilterFields, value: any) {
         const checkboxChoices = this.getCheckboxChoices(field);
         return Object.keys(checkboxChoices).indexOf(value) !== -1;
     }
 
-    public static isValidRadioOption(field: number, value: any)
-    {
+    public static isValidRadioOption(field: FilterFields, value: any) {
         const radioChoices = this.getRadioChoices(field);
         return Object.keys(radioChoices).indexOf(value) !== -1;
     }

@@ -6,17 +6,39 @@ body {
 
 .block {
   text-align: left;
-  padding: 10px;
+  padding: 45px 10px 10px;
   border: 2px solid red;
   margin: 5px;
+  position: relative;
 }
 
+.block .block-type {
+  width: 66px;
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  border: 2px solid red;
+  border-radius: 0;
+}
 .block .block-buttons {
-  background: #ddd;
+  padding: 7px;
+  background: #efefef;
+  border-radius: 5px;
+}
+
+.block .block-buttons .btn-primary {
+  margin-right: 5px;
 }
 
 .block .block-field {
   border: 2px solid green;
-  padding: 5px;
+  padding: 5px 30px 5px 5px;
   margin: 5px;
+  position: relative;
+}
+
+.delete-field {
+  position: absolute;
+  right: 6px;
+  top: 7px;
 }

@@ -1,7 +1,6 @@
 import * as React from "react";
-import {Config, FieldTypes, FilterType} from "./Config";
+import {Config, FilterFields, FilterType} from "./Config";
 import {IFieldProps} from "./Filters";
-import Randomizer from "./Randomizer";
 import CheckboxInput from "./ValueInput/CheckboxInput";
 import RadioInput from "./ValueInput/RadioInput";
 import SingleInput from "./ValueInput/SingleInput";
@@ -16,8 +15,7 @@ interface IState {
     filters: any,
     value: any,
     checkboxValues: any[],
-    valueField: any,
-    selectedField: number
+    selectedField: FilterFields
     selectedFilter: FilterType
 }
 
@@ -25,16 +23,15 @@ export class Field extends React.Component<IFieldDataProps, IState> {
 
     private config: Config;
 
-    constructor(props: IFieldDataProps){
+    constructor(props: IFieldDataProps) {
         super(props);
         this.state = {
             checkboxValues: [],
-            fields: '',
-            filters: '',
-            selectedField: -1,
+            fields: null,
+            filters: null,
+            selectedField: FilterFields.EMPTY,
             selectedFilter: FilterType.EMPTY,
-            value: '',
-            valueField: '',
+            value: null
         };
         this.config = new Config();
 
@@ -52,20 +49,23 @@ export class Field extends React.Component<IFieldDataProps, IState> {
     }
 
     public render() {
-        return <div className="block-field">
-            <div>
-                <button onClick={this.removeFieldClick}>X</button>
-            </div>
-            <div>
-                <select onChange={this.selectField} value={this.state.selectedField}>
+        return <div className="block-field row">
+            <div className="col-md-4">
+                <select onChange={this.selectField} value={this.state.selectedField} className="form-control">
                     {this.state.fields}
                 </select>
             </div>
             {this.state.filters}
-            <div>
-                <SingleInput currentValue={this.state.value} onValueChange={this.changeValue} currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
-                <RadioInput currentValue={this.state.value} onValueChange={this.onRadioChange} currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
-                <CheckboxInput currentValue={this.state.value} onValueChange={this.onCheckboxChange} currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
+            <div className="col-md-4">
+                <SingleInput currentValue={this.state.value} onValueChange={this.changeValue}
+                             currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
+                <RadioInput currentValue={this.state.value} onValueChange={this.onRadioChange}
+                            currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
+                <CheckboxInput currentValue={this.state.value} onValueChange={this.onCheckboxChange}
+                               currentField={this.state.selectedField} currentFilter={this.state.selectedFilter}/>
+            </div>
+            <div className="delete-field">
+                <button onClick={this.removeFieldClick} className="btn btn-danger btn-sm">X</button>
             </div>
         </div>;
     }
@@ -80,85 +80,63 @@ export class Field extends React.Component<IFieldDataProps, IState> {
     }
 
     private selectField(event: any) {
-        if (!Config.isFieldOnList(event.target.value)) {
-            return;
-        }
+        const field = Config.getFieldConstant(event.target.value);
 
         this.setState({
             checkboxValues: [],
-            selectedField: event.target.value,
+            selectedField: field,
             selectedFilter: FilterType.EMPTY,
-            value: '',
-            valueField: ''
-        });
-
-        this.resetData();
-        this.createFilters(event.target.value);
-    }
-
-    private selectFilter(event: any) {
-        const selectedFilter = parseInt(event.target.value, 10);
-        this.resetData();
-
-        if (!Config.isFilterValid(this.state.selectedField, selectedFilter)) {
-            return;
-        }
-
-        this.setState({
-            selectedFilter,
             value: null
         });
 
+        this.resetData();
+        this.createFilters(field);
     }
 
-    private createFilters(field: string) {
-        const filters = Config.getFilterChoicesForField(parseInt(field, 10));
+    private createFilters(field: FilterFields) {
+        const filters = Config.getFilterChoicesForField(field);
         const keys = Object.keys(filters);
         const options = keys.map((key) => <option key={'filter_' + key} value={key}>{filters[key]}</option>);
 
         this.setState({
-            filters: <div><select onChange={this.selectFilter}>{options}</select></div>,
+            filters: options.length > 0 && <div className="col-md-4"><select onChange={this.selectFilter}
+                                                                             className="form-control">{options}</select>
+            </div>,
             selectedFilter: FilterType.EMPTY,
+            value: null
+        });
+    }
+
+    private selectFilter(event: any) {
+
+        const selectedFilter = Config.getFilterConstForValue(this.state.selectedField, event.target.value);
+
+        this.resetData();
+        this.setState({
+            selectedFilter,
             value: ''
         });
     }
 
     private changeValue(event: any) {
         const value = event.target.value;
-        this.setState({ value });
+        this.setState({value});
         this.fillData(value);
     }
 
-    private onCheckboxChange(event: any) {
-        const isChecked = event.target.checked;
-        const value = event.target.value;
-
-        if (! Config.isValidCheckboxOption(this.state.selectedField, value)) {
-            return;
-        }
-
-        const previousValue: any[] = Array.isArray(this.state.value) ? this.state.value : [];
-        let checkboxValues = [];
-
-        if (isChecked && previousValue.indexOf(value) === -1) {
-            checkboxValues = [...previousValue, value];
-        } else if (!isChecked && previousValue.indexOf(value) !== -1) {
-            checkboxValues = previousValue.filter(element => element !== value);
-        }
-
-        this.setState({ value: checkboxValues });
-        this.fillData(checkboxValues);
+    private onCheckboxChange(value: any[]) {
+        this.setState({value});
+        this.fillData(value);
     }
 
-    private onRadioChange(event: any) {
-        const value = event.target.value;
-
-        if (!Config.isValidRadioOption(this.state.selectedField, value)) {
-            return;
+    private onRadioChange(value: any) {
+        if (value === null) {
+            this.setState({value: null});
+            this.resetData();
+        } else {
+            this.setState({value});
+            this.fillData(value);
         }
-
-        this.setState({ value });
-        this.fillData(value);
     }
 
     private removeFieldClick() {

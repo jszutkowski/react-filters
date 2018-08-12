@@ -6,17 +6,14 @@ import IMultiInputProps from "./IMultiInputProps";
 export default class RadioInput extends React.Component<IMultiInputProps, {}> {
     private readonly uniqueName: string;
 
-    constructor(props: IMultiInputProps){
+    constructor(props: IMultiInputProps) {
         super(props);
         this.uniqueName = Randomizer.getRandomNamePrefix();
+        this.onValueChange = this.onValueChange.bind(this);
     }
 
     public render() {
-        if (this.props.currentFilter === FilterType.EMPTY) {
-            return null;
-        }
-
-        if (Config.getFieldType(this.props.currentField) !== FieldTypes.RADIO) {
+        if (!this.isVisible()) {
             return null;
         }
 
@@ -26,10 +23,26 @@ export default class RadioInput extends React.Component<IMultiInputProps, {}> {
         return <div>
             {choicesKeys.map(key => (
                 <div key={this.uniqueName + "_" + key}>
-                    <label >{choices[key]}</label>
-                    <input type="radio" name={this.uniqueName} value={key} onChange={this.props.onValueChange} />
+                    <label>{choices[key]}</label>
+                    <input type="radio" name={this.uniqueName} value={key} onChange={this.onValueChange}/>
                 </div>
             ))}
         </div>;
+    }
+
+    private isVisible(): boolean {
+        return this.props.currentFilter !== FilterType.EMPTY
+            && Config.getFieldType(this.props.currentField) === FieldTypes.RADIO;
+    }
+
+    private onValueChange(event: any) {
+
+        const value = event.target.value;
+
+        if (!Config.isValidRadioOption(this.props.currentField, value)) {
+            this.props.onValueChange(null);
+        } else {
+            this.props.onValueChange(value);
+        }
     }
 }
